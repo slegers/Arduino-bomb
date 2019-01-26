@@ -9,7 +9,7 @@ long currentMillis;
 
 const byte ROWS = 4; 
 const byte COLS = 4; 
-
+bool explosion = false;
 char hexaKeys[ROWS][COLS] = {
   {'1', '2', '3', 'A'},
   {'4', '5', '6', 'B'},
@@ -17,7 +17,7 @@ char hexaKeys[ROWS][COLS] = {
   {'*', '0', '#', 'D'}
 };
 String password;
-
+String guess;
 byte rowPins[ROWS] = {9, 8, 7, 6}; 
 byte colPins[COLS] = {5, 4, 3, 2}; 
 
@@ -29,9 +29,44 @@ Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS)
 void setup(){
   lcd.begin(16,2);
   lcd.backlight();
-  //askPass();
+  askPass();
   setTime();
+  start();
 }
+
+void startCountDown(){
+  
+}
+
+void pauzeCountdown(){
+  
+}
+
+void start(){
+  lcd.setCursor(2,1);
+  lcd.print("Start? press A");
+  char customKey = customKeypad.getKey();
+    while(customKey != 'A'){
+      customKey = customKeypad.getKey();
+       if (customKey){
+          lcd.setCursor(2,1);
+          lcd.print("Start:          ");
+       }
+    }
+    lcd.setCursor(9,1);
+    delay(1000);
+    for(int  i=3; i > 0;i--){
+      lcd.print(i);
+      lcd.print(" ");
+      delay(1000);
+    }
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+    lcd.setCursor(4,1);
+    lcd.print("Code: ");
+
+}
+
 
 void setTime(){
  lcd.setCursor(0,0); //First line
@@ -41,7 +76,6 @@ void setTime(){
     setHours();
     setMinutes();
     setSeconds();
-    
   } 
 }
 
@@ -76,11 +110,11 @@ long timeInput(){
 void setMinutes(){
   lcd.setCursor(9,0);
   lcd.blink();
-  tijd += timeInput() * 60 * 1000;
+  tijd += timeInput() * 60;
 }
 void setSeconds(){
   lcd.setCursor(12,0);
-  tijd += timeInput() * 1000;
+  tijd += timeInput();
   lcd.noBlink();
 } 
 
@@ -104,18 +138,36 @@ void askPass(){
 
 void loop()
 {
+  bool gewonnen = false;
+  while(tijd >= 0 and !gewonnen){
   currentMillis = millis();
   if(currentMillis - previousMillis > interval) {
-    // save the last time you blinked the LED 
     previousMillis = currentMillis;  
     updateTime();
+   }else if(password.equals(guess)){
+      gewonnen = true;
+   
    }else{
       char customKey = customKeypad.getKey();
-      lcd.setCursor(10,1);
-      if (customKey == 'C'){
-        setWinnaar(true);
+      if(customKey){
+          lcd.setCursor(10,1);
+          if (password.equals(guess)){
+              lcd.clear();
+              gewonnen = true;
+          }else if(guess.length() < 4){
+            lcd.setCursor(11+guess.length(),1);
+            lcd.print("*");
+            guess += customKey;
+          }else{
+            guess = "";
+            lcd.setCursor(4,1);
+            lcd.print("Code: ");
+          }
       }
    }
+ }
+ setWinnaar(gewonnen); 
+ exit(0);
 }
 
 void setWinnaar(bool gewonnen){
@@ -127,10 +179,35 @@ void setWinnaar(bool gewonnen){
     lcd.setCursor(3,1);
     lcd.print("Gewonnen");
   }else{
-    lcd.print("Proficiat!!");
+    lcd.print("Bom ontmanteld!!");
   }
 }
 
-void updateTime(){
- 
+void updateTime(){ 
+  long hour = tijd / 3600;
+      lcd.setCursor(6,0);
+  if(hour > 9){
+    lcd.print(hour);
+  }else{
+    lcd.print(0);
+    lcd.print(hour);
+  }
+  long minute = tijd / 60;
+      lcd.setCursor(9,0);
+
+    if(minute > 9){
+    lcd.print(minute);
+  }else{
+    lcd.print(0);
+    lcd.print(minute);
+  }
+  long sec = tijd % 60;
+  lcd.setCursor(12,0);
+    if(sec > 9){
+    lcd.print(sec);
+  }else{
+    lcd.print(0);
+    lcd.print(sec);
+  }
+  tijd -= 1;
 }
