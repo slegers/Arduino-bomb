@@ -6,7 +6,7 @@
 
 LiquidCrystal_I2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address, if it's not working try 0x3F.
 long currentMillis;
-
+bool sound = false;
 const byte ROWS = 4; 
 const byte COLS = 4; 
 bool explosion = false;
@@ -166,7 +166,10 @@ void loop()
       }
    }
  }
- setWinnaar(gewonnen); 
+ setWinnaar(gewonnen);
+ while(sound){
+     tone(12,261);
+ }
  exit(0);
 }
 
