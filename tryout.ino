@@ -23,33 +23,66 @@ byte colPins[COLS] = {5, 4, 3, 2};
 
 long interval = 1000;  
 long previousMillis = 0;
-long tijd;
-bool s = true;
+long tijd = 0;
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); 
 
 void setup(){
   lcd.begin(16,2);
   lcd.backlight();
-  askPass();
+  //askPass();
   setTime();
-  // iInit the LCD for 16 chars 2 lines
-   // Turn on the backligt (try lcd.noBaklight() to turn it off)
-  
 }
 
 void setTime(){
-  lcd.setCursor(0,0); //First line
-  lcd.print("Time: 00:00:00");
-  lcd.setCursor(6,0);
-  lcd.blink();
-
+ lcd.setCursor(0,0); //First line
+ lcd.print("Time: 00:00:00");
+ lcd.blink();
   while(tijd == 0){
     setHours();
     setMinutes();
     setSeconds();
-  }
-  
+    
+  } 
 }
+
+void setHours(){
+  lcd.setCursor(6,0);
+  lcd.blink();
+  tijd = timeInput() * 3600;
+
+}
+
+long timeInput(){
+  int i = 0;
+  long t = 0;
+  while(i < 2){
+      char customKey = customKeypad.getKey();
+      if (customKey and isDigit(customKey)){
+        if(i == 0 and (customKey - 48 < 6)){
+         lcd.print(customKey);
+         t = (customKey-'0')*10;
+         i++;
+        }else if(i != 0){
+          lcd.print(customKey);
+          i++;
+          t += (customKey-'0');
+        }
+      }
+  }
+  return t;
+}
+
+
+void setMinutes(){
+  lcd.setCursor(9,0);
+  lcd.blink();
+  tijd += timeInput() * 60 * 1000;
+}
+void setSeconds(){
+  lcd.setCursor(12,0);
+  tijd += timeInput() * 1000;
+  lcd.noBlink();
+} 
 
 void askPass(){
     lcd.setCursor(0,0);
@@ -72,16 +105,14 @@ void askPass(){
 void loop()
 {
   currentMillis = millis();
- 
-  if(currentMillis - previousMillis > interval and s and (tijd - currentMillis) > 0) {
+  if(currentMillis - previousMillis > interval) {
     // save the last time you blinked the LED 
-    previousMillis = currentMillis;   
+    previousMillis = currentMillis;  
     updateTime();
    }else{
       char customKey = customKeypad.getKey();
       lcd.setCursor(10,1);
       if (customKey == 'C'){
-        s = false;
         setWinnaar(true);
       }
    }
@@ -101,6 +132,5 @@ void setWinnaar(bool gewonnen){
 }
 
 void updateTime(){
-  lcd.setCursor(12,0);
-  lcd.print((tijd - currentMillis)/1000);
+ 
 }
